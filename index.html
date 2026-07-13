@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockLedger Pro | Warehouse Management</title>
+    <title>StockLedger Pro | QR Enabled</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF & QR Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .nav-link.active { @apply text-indigo-600 border-b-2 border-indigo-600; }
         .hidden { display: none; }
+        #reader { width: 100%; border-radius: 1rem; overflow: hidden; border: none !important; }
+        #reader__scan_region { background: white !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -68,12 +73,17 @@
     <main id="page-log" class="max-w-xl mx-auto px-4 py-12 hidden">
         <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl">
             <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">Log Movement</h2>
+            
+            <!-- QR SCANNER SECTION -->
+            <div id="scanner-container" class="hidden mb-6">
+                <div id="reader"></div>
+                <button onclick="stopScanner()" class="w-full mt-2 text-xs text-red-500 font-bold uppercase">Cancel Scan</button>
+            </div>
+
             <form id="intakeForm" class="space-y-5">
-                <!-- TOGGLE -->
-                <div class="flex p-1 bg-slate-100 rounded-xl relative">
+                <div class="flex p-1 bg-slate-100 rounded-xl">
                     <input type="radio" name="movementType" id="typeIn" value="IN" class="hidden" checked>
                     <label for="typeIn" id="labelIn" class="flex-1 text-center py-3 rounded-lg cursor-pointer font-bold text-sm bg-emerald-500 text-white shadow-sm transition-all">STOCK IN</label>
-                    
                     <input type="radio" name="movementType" id="typeOut" value="OUT" class="hidden">
                     <label for="typeOut" id="labelOut" class="flex-1 text-center py-3 rounded-lg cursor-pointer font-bold text-sm text-slate-500 transition-all">STOCK OUT</label>
                 </div>
@@ -82,10 +92,18 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Operator Name</label>
                     <input type="text" id="staffName" required class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none bg-slate-50">
                 </div>
+
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Select Product</label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Product SKU</label>
+                        <button type="button" onclick="startScanner()" class="text-indigo-600 text-xs font-bold flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h3m-3 3h3m5 6V8a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2z"></path></svg>
+                            SCAN QR CODE
+                        </button>
+                    </div>
                     <select id="matName" required class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none bg-white"></select>
                 </div>
+
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Quantity</label>
                     <input type="number" id="matQty" required min="1" class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none">
@@ -140,6 +158,42 @@
         let allTransactions = [];
         let allProducts = [];
         let currentBalances = {};
+        let html5QrCode;
+
+        // --- QR SCANNER LOGIC ---
+        window.startScanner = async () => {
+            document.getElementById('scanner-container').classList.remove('hidden');
+            html5QrCode = new Html5Qrcode("reader");
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            try {
+                await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+                    // Success: decodedText should be the SKU ID
+                    const skuSelect = document.getElementById('matName');
+                    const exists = Array.from(skuSelect.options).some(opt => opt.value === decodedText);
+                    
+                    if (exists) {
+                        skuSelect.value = decodedText;
+                        if (navigator.vibrate) navigator.vibrate(200);
+                        stopScanner();
+                    } else {
+                        alert(`Scanned SKU "${decodedText}" not found in product list.`);
+                    }
+                });
+            } catch (err) {
+                alert("Camera error: " + err);
+                document.getElementById('scanner-container').classList.add('hidden');
+            }
+        };
+
+        window.stopScanner = () => {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('scanner-container').classList.add('hidden');
+                });
+            }
+        };
 
         // --- TOGGLE LOGIC ---
         const typeIn = document.getElementById('typeIn');
@@ -159,13 +213,6 @@
 
         typeIn.addEventListener('change', updateToggleUI);
         typeOut.addEventListener('change', updateToggleUI);
-
-        // --- DELETE PRODUCT ---
-        window.confirmDeleteProduct = async (docId, skuId) => {
-            if (confirm(`Delete ${skuId}?`)) {
-                await deleteDoc(doc(db, "products", docId));
-            }
-        };
 
         // --- DATA LISTENERS ---
         onSnapshot(query(productsRef, orderBy("id")), (snapshot) => {
@@ -218,18 +265,13 @@
             }).join('');
         }
 
-        // --- FORM SUBMISSION (FIXED) ---
+        // --- FORM SUBMISSION ---
         document.getElementById('intakeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerText = "Processing...";
-
-            // Explicitly check which radio is checked
             const selectedType = document.getElementById('typeOut').checked ? 'OUT' : 'IN';
             const rawQty = parseInt(document.getElementById('matQty').value);
-            
-            // Force negative if OUT, force positive if IN
             const finalQty = selectedType === 'OUT' ? -Math.abs(rawQty) : Math.abs(rawQty);
 
             try {
@@ -242,21 +284,15 @@
                     bayNumber: document.getElementById('bayNum').value.toUpperCase(),
                     timestamp: serverTimestamp()
                 });
-                
                 localStorage.setItem('staffName', document.getElementById('staffName').value);
                 document.getElementById('matQty').value = "";
-                document.getElementById('bayNum').value = "";
-                
-                // Reset toggle to IN
                 typeIn.checked = true;
                 updateToggleUI();
-                
                 showPage('dashboard');
             } catch (err) {
                 alert("Error: " + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Confirm Movement";
             }
         });
 
@@ -266,6 +302,10 @@
             document.getElementById('productForm').reset();
         });
 
+        window.confirmDeleteProduct = async (docId, skuId) => {
+            if (confirm(`Delete ${skuId}?`)) await deleteDoc(doc(db, "products", docId));
+        };
+
         window.showPage = (pageId) => {
             ['dashboard', 'log', 'products'].forEach(p => {
                 document.getElementById(`page-${p}`).classList.add('hidden');
@@ -273,6 +313,7 @@
             });
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
             document.getElementById(`nav-${pageId}`).classList.add('active');
+            if (pageId !== 'log') stopScanner();
         };
 
         window.downloadPDF = () => {
