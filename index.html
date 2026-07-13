@@ -16,7 +16,6 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <!-- TOP NAVIGATION -->
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between h-16">
@@ -27,7 +26,6 @@
                         </div>
                         <span class="font-bold text-slate-800 hidden lg:block tracking-tight">StockLedger <span class="text-indigo-600">Pro</span></span>
                     </div>
-                    
                     <div class="flex h-full space-x-4 md:space-x-8">
                         <button onclick="showPage('dashboard')" id="nav-dashboard" class="nav-link active h-full flex items-center px-1 text-xs md:text-sm font-medium text-slate-500 transition-all">Dashboard</button>
                         <button onclick="showPage('log')" id="nav-log" class="nav-link h-full flex items-center px-1 text-xs md:text-sm font-medium text-slate-500 transition-all">Log Movement</button>
@@ -35,26 +33,21 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button onclick="downloadPDF()" class="hidden md:flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all">
-                        Export PDF
-                    </button>
+                    <button onclick="downloadPDF()" class="hidden md:flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all">Export PDF</button>
                     <div id="connection-status" class="text-[10px] font-bold uppercase px-2 py-1 rounded bg-amber-100 text-amber-600">Connecting...</div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- PAGE 1: DASHBOARD -->
+    <!-- DASHBOARD -->
     <main id="page-dashboard" class="max-w-6xl mx-auto px-4 py-8 space-y-8">
         <section>
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Live Stock Levels</h2>
-            <div id="inventoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <!-- Dynamic SKU Cards -->
-            </div>
+            <div id="inventoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
         </section>
-
         <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-slate-100 flex flex-col md:row justify-between items-center bg-slate-50/50 gap-4">
+            <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center bg-slate-50/50 gap-4">
                 <h3 class="font-bold text-slate-700">Audit Log</h3>
                 <input type="text" id="searchInput" placeholder="Search SKU or Staff..." class="w-full md:w-64 px-4 py-1.5 text-xs border border-slate-300 rounded-full outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
@@ -75,12 +68,10 @@
         </section>
     </main>
 
-    <!-- PAGE 2: LOG MOVEMENT -->
+    <!-- LOG MOVEMENT -->
     <main id="page-log" class="max-w-xl mx-auto px-4 py-12 hidden">
         <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-slate-800">Log Movement</h2>
-            </div>
+            <h2 class="text-2xl font-bold text-slate-800 text-center mb-8">Log Movement</h2>
             <form id="intakeForm" class="space-y-5">
                 <div class="flex p-1 bg-slate-100 rounded-xl">
                     <input type="radio" name="movementType" id="typeIn" value="IN" class="hidden" checked>
@@ -94,9 +85,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Select Product</label>
-                    <select id="matName" required class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none bg-white">
-                        <!-- Dynamic Options -->
-                    </select>
+                    <select id="matName" required class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none bg-white"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Quantity</label>
@@ -111,43 +100,33 @@
         </div>
     </main>
 
-    <!-- PAGE 3: MANAGE PRODUCTS -->
-    <main id="page-products" class="max-w-2xl mx-auto px-4 py-12 hidden">
+    <!-- MANAGE PRODUCTS -->
+    <main id="page-products" class="max-w-3xl mx-auto px-4 py-12 hidden">
         <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm mb-8">
             <h2 class="text-xl font-bold text-slate-800 mb-6">Add New Product Line</h2>
             <form id="productForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="md:col-span-1">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">SKU ID</label>
-                    <input type="text" id="newSkuId" required placeholder="e.g. TEV200G" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 uppercase">
-                </div>
-                <div class="md:col-span-1">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Product Name</label>
-                    <input type="text" id="newSkuName" required placeholder="e.g. 200ml Glass" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="w-full bg-slate-800 text-white font-bold py-2 rounded-lg hover:bg-slate-900 transition-all">Add Product</button>
-                </div>
+                <input type="text" id="newSkuId" required placeholder="SKU ID (e.g. TEV200G)" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none uppercase">
+                <input type="text" id="newSkuName" required placeholder="Product Name" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none">
+                <button type="submit" class="w-full bg-slate-800 text-white font-bold py-2 rounded-lg hover:bg-slate-900 transition-all">Add Product</button>
             </form>
         </div>
-
         <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-widest">
                     <tr>
                         <th class="px-6 py-3">SKU ID</th>
                         <th class="px-6 py-3">Product Name</th>
+                        <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="productListBody" class="divide-y divide-slate-100">
-                    <!-- Dynamic Product List -->
-                </tbody>
+                <tbody id="productListBody" class="divide-y divide-slate-100"></tbody>
             </table>
         </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAXcgmqzxpa1zWaxwkDr5xVNAujC6OxkKg",
@@ -167,7 +146,20 @@
         let allProducts = [];
         let currentBalances = {};
 
-        // --- INITIAL SEEDING ---
+        // --- DELETE PRODUCT LOGIC ---
+        window.confirmDeleteProduct = async (docId, skuId) => {
+            const confirmed = confirm(`Are you sure you want to delete ${skuId}?\n\nThis will remove it from the dashboard. Ledger history will remain in the database but will no longer be calculated.`);
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, "products", docId));
+                    alert("Product deleted successfully.");
+                } catch (error) {
+                    console.error("Error deleting document: ", error);
+                    alert("Failed to delete product.");
+                }
+            }
+        };
+
         async function seedProducts() {
             const snapshot = await getDocs(productsRef);
             if (snapshot.empty) {
@@ -184,10 +176,12 @@
         }
         seedProducts();
 
-        // --- LISTENERS ---
         onSnapshot(query(productsRef, orderBy("id")), (snapshot) => {
             allProducts = [];
-            snapshot.forEach(doc => allProducts.push(doc.data()));
+            snapshot.forEach(doc => {
+                // We store the docId so we can delete it later
+                allProducts.push({ docId: doc.id, ...doc.data() });
+            });
             updateDropdowns();
             updateUI();
         });
@@ -200,27 +194,27 @@
             document.getElementById('connection-status').className = "text-[10px] font-bold uppercase px-2 py-1 rounded bg-green-100 text-green-600";
         });
 
-        // --- UI UPDATES ---
         function updateDropdowns() {
             const select = document.getElementById('matName');
             const listBody = document.getElementById('productListBody');
+            select.innerHTML = `<option value="" disabled selected>Select SKU...</option>` + allProducts.map(p => `<option value="${p.id}">${p.id} (${p.name})</option>`).join('');
             
-            const options = allProducts.map(p => `<option value="${p.id}">${p.id} (${p.name})</option>`).join('');
-            select.innerHTML = `<option value="" disabled selected>Select SKU...</option>` + options;
-
             listBody.innerHTML = allProducts.map(p => `
                 <tr>
                     <td class="px-6 py-4 font-mono font-bold text-indigo-600">${p.id}</td>
                     <td class="px-6 py-4 text-slate-600">${p.name}</td>
-                </tr>
-            `).join('');
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="confirmDeleteProduct('${p.docId}', '${p.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs uppercase tracking-tighter">
+                            Delete
+                        </button>
+                    </td>
+                </tr>`).join('');
         }
 
         function updateUI() {
             currentBalances = {};
             allProducts.forEach(p => currentBalances[p.id] = 0);
             allTransactions.forEach(t => { if(currentBalances[t.materialName] !== undefined) currentBalances[t.materialName] += t.quantity; });
-
             document.getElementById('inventoryGrid').innerHTML = allProducts.map(p => `
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <p class="text-[10px] font-bold text-slate-400 uppercase truncate">${p.name}</p>
@@ -228,42 +222,32 @@
                     <p class="text-[9px] font-mono text-slate-400">${p.id}</p>
                 </div>
             `).join('');
-
             renderTable(allTransactions);
         }
 
         function renderTable(data) {
             document.getElementById('ledgerBody').innerHTML = data.map(item => {
                 const date = item.timestamp ? new Date(item.timestamp.seconds * 1000).toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '...';
-                return `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'OUT' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}">${item.type}</span></td>
-                        <td class="px-6 py-4 font-bold text-slate-700">${item.materialName}</td>
-                        <td class="px-6 py-4 text-right font-mono font-bold ${item.type === 'OUT' ? 'text-red-500' : 'text-emerald-600'}">${item.type === 'OUT' ? '' : '+'}${item.quantity}</td>
-                        <td class="px-6 py-4 text-xs font-medium text-slate-600">${item.submittedBy || 'System'}</td>
-                        <td class="px-6 py-4 text-[11px] text-slate-400">${date}</td>
-                    </tr>
-                `;
+                return `<tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'OUT' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}">${item.type}</span></td>
+                    <td class="px-6 py-4 font-bold text-slate-700">${item.materialName}</td>
+                    <td class="px-6 py-4 text-right font-mono font-bold ${item.type === 'OUT' ? 'text-red-500' : 'text-emerald-600'}">${item.type === 'OUT' ? '' : '+'}${item.quantity}</td>
+                    <td class="px-6 py-4 text-xs font-medium text-slate-600">${item.submittedBy || 'System'}</td>
+                    <td class="px-6 py-4 text-[11px] text-slate-400">${date}</td>
+                </tr>`;
             }).join('');
         }
 
-        // --- FORMS ---
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('newSkuId').value.toUpperCase();
-            const name = document.getElementById('newSkuName').value;
-            await addDoc(productsRef, { id, name });
+            await addDoc(productsRef, { id: document.getElementById('newSkuId').value.toUpperCase(), name: document.getElementById('newSkuName').value });
             document.getElementById('productForm').reset();
-            alert("New Product Added!");
         });
 
         document.getElementById('intakeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
             const type = document.querySelector('input[name="movementType"]:checked').value;
             const qty = parseInt(document.getElementById('matQty').value);
-            
             await addDoc(ledgerRef, {
                 submittedBy: document.getElementById('staffName').value,
                 materialName: document.getElementById('matName').value,
@@ -276,10 +260,8 @@
             localStorage.setItem('staffName', document.getElementById('staffName').value);
             document.getElementById('matQty').value = "";
             showPage('dashboard');
-            btn.disabled = false;
         });
 
-        // --- HELPERS ---
         window.showPage = (pageId) => {
             ['dashboard', 'log', 'products'].forEach(p => {
                 document.getElementById(`page-${p}`).classList.add('hidden');
