@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockLedger Pro | Warehouse Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-link.active { @apply text-indigo-600 border-b-2 border-indigo-600; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- TOP NAVIGATION -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 mr-4">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        </div>
+                        <span class="font-bold text-slate-800 hidden lg:block tracking-tight">StockLedger <span class="text-indigo-600">Pro</span></span>
+                    </div>
+                    
+                    <div class="flex h-full space-x-4 md:space-x-8">
+                        <button onclick="showPage('dashboard')" id="nav-dashboard" class="nav-link active h-full flex items-center px-1 text-xs md:text-sm font-medium text-slate-500 transition-all">Dashboard</button>
+                        <button onclick="showPage('log')" id="nav-log" class="nav-link h-full flex items-center px-1 text-xs md:text-sm font-medium text-slate-500 transition-all">Log Movement</button>
+                        <button onclick="showPage('products')" id="nav-products" class="nav-link h-full flex items-center px-1 text-xs md:text-sm font-medium text-slate-500 transition-all">Manage Products</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="downloadPDF()" class="hidden md:flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-all">
+                        Export PDF
+                    </button>
+                    <div id="connection-status" class="text-[10px] font-bold uppercase px-2 py-1 rounded bg-amber-100 text-amber-600">Connecting...</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAGE 1: DASHBOARD -->
+    <main id="page-dashboard" class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+        <section>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Live Stock Levels</h2>
+            <div id="inventoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- Dynamic SKU Cards -->
+            </div>
+        </section>
+
+        <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex flex-col md:row justify-between items-center bg-slate-50/50 gap-4">
+                <h3 class="font-bold text-slate-700">Audit Log</h3>
+                <input type="text" id="searchInput" placeholder="Search SKU or Staff..." class="w-full md:w-64 px-4 py-1.5 text-xs border border-slate-300 rounded-full outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                            <th class="px-6 py-3">Type</th>
+                            <th class="px-6 py-3">SKU</th>
+                            <th class="px-6 py-3 text-right">Qty</th>
+                            <th class="px-6 py-3">Staff</th>
+                            <th class="px-6 py-3">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerBody" class="divide-y divide-slate-50"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- PAGE 2: LOG MOVEMENT -->
+    <main id="page-log" class="max-w-xl mx-auto px-4 py-12 hidden">
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-slate-800">Log Movement</h2>
+            </div>
+            <form id="intakeForm" class="space-y-5">
+                <div class="flex p-1 bg-slate-100 rounded-xl">
+                    <input type="radio" name="movementType" id="typeIn" value="IN" class="hidden" checked>
+                    <label for="typeIn" id="labelIn" class="flex-1 text-center py-3 rounded-lg cursor-pointer font-bold text-sm bg-emerald-500 text-white shadow-sm">STOCK IN</label>
+                    <input type="radio" name="movementType" id="typeOut" value="OUT" class="hidden">
+                    <label for="typeOut" id="labelOut" class="flex-1 text-center py-3 rounded-lg cursor-pointer font-bold text-sm text-slate-500">STOCK OUT</label>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Operator Name</label>
+                    <input type="text" id="staffName" required class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none bg-slate-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Select Product</label>
+                    <select id="matName" required class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none bg-white">
+                        <!-- Dynamic Options -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Quantity</label>
+                    <input type="number" id="matQty" required min="1" class="w-full px-4 py-3 rounded-xl border border-slate-300 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="warehouse" placeholder="Warehouse" value="Main" class="px-4 py-3 rounded-xl border border-slate-300 outline-none">
+                    <input type="text" id="bayNum" placeholder="Bay (e.g. A1)" required class="px-4 py-3 rounded-xl border border-slate-300 outline-none uppercase">
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all">Confirm Movement</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- PAGE 3: MANAGE PRODUCTS -->
+    <main id="page-products" class="max-w-2xl mx-auto px-4 py-12 hidden">
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm mb-8">
+            <h2 class="text-xl font-bold text-slate-800 mb-6">Add New Product Line</h2>
+            <form id="productForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">SKU ID</label>
+                    <input type="text" id="newSkuId" required placeholder="e.g. TEV200G" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 uppercase">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Product Name</label>
+                    <input type="text" id="newSkuName" required placeholder="e.g. 200ml Glass" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-slate-800 text-white font-bold py-2 rounded-lg hover:bg-slate-900 transition-all">Add Product</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-widest">
+                    <tr>
+                        <th class="px-6 py-3">SKU ID</th>
+                        <th class="px-6 py-3">Product Name</th>
+                    </tr>
+                </thead>
+                <tbody id="productListBody" class="divide-y divide-slate-100">
+                    <!-- Dynamic Product List -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXcgmqzxpa1zWaxwkDr5xVNAujC6OxkKg",
+            authDomain: "warehouse-intake-system.firebaseapp.com",
+            projectId: "warehouse-intake-system",
+            storageBucket: "warehouse-intake-system.firebasestorage.app",
+            messagingSenderId: "367671282137",
+            appId: "1:367671282137:web:f950fe1156c87474c871c8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const ledgerRef = collection(db, "stock_ledger");
+        const productsRef = collection(db, "products");
+
+        let allTransactions = [];
+        let allProducts = [];
+        let currentBalances = {};
+
+        // --- INITIAL SEEDING ---
+        async function seedProducts() {
+            const snapshot = await getDocs(productsRef);
+            if (snapshot.empty) {
+                const initial = [
+                    { id: 'TEV100G', name: 'TEV - 100ML GLASS BOTTLES' },
+                    { id: 'TEVAS', name: 'TEV - ATOMISER SPRAYER' },
+                    { id: 'TEVLD', name: 'TEV - LIDS' },
+                    { id: 'TC10G', name: 'TC - 10ML GLASS BOTTLES' },
+                    { id: 'TC50G', name: 'TC - 50ML GLASS BOTTLES' },
+                    { id: 'TCAS', name: 'TC - ATOMISER SPRAYER' }
+                ];
+                for (const p of initial) { await addDoc(productsRef, p); }
+            }
+        }
+        seedProducts();
+
+        // --- LISTENERS ---
+        onSnapshot(query(productsRef, orderBy("id")), (snapshot) => {
+            allProducts = [];
+            snapshot.forEach(doc => allProducts.push(doc.data()));
+            updateDropdowns();
+            updateUI();
+        });
+
+        onSnapshot(query(ledgerRef, orderBy("timestamp", "desc")), (snapshot) => {
+            allTransactions = [];
+            snapshot.forEach(doc => allTransactions.push(doc.data()));
+            updateUI();
+            document.getElementById('connection-status').innerText = "Live";
+            document.getElementById('connection-status').className = "text-[10px] font-bold uppercase px-2 py-1 rounded bg-green-100 text-green-600";
+        });
+
+        // --- UI UPDATES ---
+        function updateDropdowns() {
+            const select = document.getElementById('matName');
+            const listBody = document.getElementById('productListBody');
+            
+            const options = allProducts.map(p => `<option value="${p.id}">${p.id} (${p.name})</option>`).join('');
+            select.innerHTML = `<option value="" disabled selected>Select SKU...</option>` + options;
+
+            listBody.innerHTML = allProducts.map(p => `
+                <tr>
+                    <td class="px-6 py-4 font-mono font-bold text-indigo-600">${p.id}</td>
+                    <td class="px-6 py-4 text-slate-600">${p.name}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateUI() {
+            currentBalances = {};
+            allProducts.forEach(p => currentBalances[p.id] = 0);
+            allTransactions.forEach(t => { if(currentBalances[t.materialName] !== undefined) currentBalances[t.materialName] += t.quantity; });
+
+            document.getElementById('inventoryGrid').innerHTML = allProducts.map(p => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase truncate">${p.name}</p>
+                    <p class="text-xl font-bold ${currentBalances[p.id] < 10 ? 'text-red-500' : 'text-slate-800'}">${(currentBalances[p.id] || 0).toLocaleString()}</p>
+                    <p class="text-[9px] font-mono text-slate-400">${p.id}</p>
+                </div>
+            `).join('');
+
+            renderTable(allTransactions);
+        }
+
+        function renderTable(data) {
+            document.getElementById('ledgerBody').innerHTML = data.map(item => {
+                const date = item.timestamp ? new Date(item.timestamp.seconds * 1000).toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '...';
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'OUT' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}">${item.type}</span></td>
+                        <td class="px-6 py-4 font-bold text-slate-700">${item.materialName}</td>
+                        <td class="px-6 py-4 text-right font-mono font-bold ${item.type === 'OUT' ? 'text-red-500' : 'text-emerald-600'}">${item.type === 'OUT' ? '' : '+'}${item.quantity}</td>
+                        <td class="px-6 py-4 text-xs font-medium text-slate-600">${item.submittedBy || 'System'}</td>
+                        <td class="px-6 py-4 text-[11px] text-slate-400">${date}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- FORMS ---
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('newSkuId').value.toUpperCase();
+            const name = document.getElementById('newSkuName').value;
+            await addDoc(productsRef, { id, name });
+            document.getElementById('productForm').reset();
+            alert("New Product Added!");
+        });
+
+        document.getElementById('intakeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            const type = document.querySelector('input[name="movementType"]:checked').value;
+            const qty = parseInt(document.getElementById('matQty').value);
+            
+            await addDoc(ledgerRef, {
+                submittedBy: document.getElementById('staffName').value,
+                materialName: document.getElementById('matName').value,
+                quantity: type === 'OUT' ? -Math.abs(qty) : Math.abs(qty),
+                type: type,
+                warehouse: document.getElementById('warehouse').value,
+                bayNumber: document.getElementById('bayNum').value.toUpperCase(),
+                timestamp: serverTimestamp()
+            });
+            localStorage.setItem('staffName', document.getElementById('staffName').value);
+            document.getElementById('matQty').value = "";
+            showPage('dashboard');
+            btn.disabled = false;
+        });
+
+        // --- HELPERS ---
+        window.showPage = (pageId) => {
+            ['dashboard', 'log', 'products'].forEach(p => {
+                document.getElementById(`page-${p}`).classList.add('hidden');
+                document.getElementById(`nav-${p}`).classList.remove('active');
+            });
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            document.getElementById(`nav-${pageId}`).classList.add('active');
+        };
+
+        window.downloadPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Stock Status Report", 14, 20);
+            const data = allProducts.map(p => [p.id, p.name, currentBalances[p.id].toLocaleString()]);
+            doc.autoTable({ startY: 30, head: [['SKU', 'Description', 'Balance']], body: data, theme: 'striped' });
+            doc.save(`Stock_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        };
+
+        document.getElementById('staffName').value = localStorage.getItem('staffName') || "";
+    </script>
+</body>
+</html>
